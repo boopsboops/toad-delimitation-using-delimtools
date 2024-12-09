@@ -47,3 +47,10 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# 
+temp
+temp-local
+ncbi-supermatrix
+software
+scripts/old*
