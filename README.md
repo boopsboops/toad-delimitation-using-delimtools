@@ -29,7 +29,7 @@ Rscript -e "renv::restore()"
 ```bash
 # run ncbi-supermatrix (cd ncbi-supermatrix first)
 scripts/download-sequences.R -c Amazophrynella -n 500 -x 600 -b 200 -a false -d false
-scripts/download-sequences.R -c Melanophryniscus_stelzneri  -n 500 -x 600 -b 10 -a true -d false
+scripts/download-sequences.R -c Melanophryniscus_stelzneri -n 500 -x 600 -b 10 -a true -d false
 scripts/clean-and-cluster.R -n 10 -c 0.6 -m 2 -d false
 # choose cluster
 scripts/pick-clusters.R -c 5 -g 16s
