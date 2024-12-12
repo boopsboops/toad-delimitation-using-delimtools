@@ -7,6 +7,10 @@ Delimitation of frogs for Herp lab meeting
 ### Install software
 
 ```bash
+########################
+### Install software ###
+########################
+
 # install code
 git clone https://github.com/boopsboops/frog-delimitation-using-delimtools.git
 cd frog-delimitation-using-delimtools
@@ -27,6 +31,10 @@ Rscript -e "renv::restore()"
 ### Get GenBank data
 
 ```bash
+########################
+### NCBI SUPERMATRIX ###
+########################
+
 # run ncbi-supermatrix (cd ncbi-supermatrix first)
 scripts/download-sequences.R -c Amazophrynella -n 500 -x 600 -b 200 -a false -d false
 scripts/download-sequences.R -c Melanophryniscus_stelzneri -n 500 -x 600 -b 10 -a true -d false
@@ -36,13 +44,17 @@ scripts/pick-clusters.R -c 5 -g 16s
 scripts/annotate-ncbi.R -t 1 -c ncbi
 scripts/filter-species.R -n 2 -i true
 scripts/align-trim-concatenate.R -p 0.05 -t 2 -i true
-scripts/tree-search.R -m GTR+G -v false -e 0.1 -t 4
+scripts/tree-search.R -m TN93+G -v false -e 0.1 -t 4
 scripts/tree-plot.R -w 1 -h 4 -s 1.5
 scripts/tidy-results-directory.R
 ```
 
 
 ```r
+########################
+### SETUP DIRS/FILES ###
+########################
+
 # load libs
 source(here::here("scripts/load-libs.R"))
 
