@@ -45,8 +45,9 @@ scripts/annotate-ncbi.R -t 1 -c ncbi
 scripts/filter-species.R -n 2 -i true
 scripts/align-trim-concatenate.R -p 0.05 -t 2 -i true
 scripts/tree-search.R -m TN93+G -v false -e 0.1 -t 4
-scripts/tree-plot.R -w 1 -h 4 -s 1.5
+scripts/tree-plot.R -w 0.5 -h 3 -s 1.5
 scripts/tidy-results-directory.R
+cd ..
 ```
 
 
@@ -82,6 +83,7 @@ fas.haps |> ape::write.FASTA(fas.path.haps)
 # root and drop haplotypes
 tr.rooted.haps <- tr |> 
     castor::root_in_edge(root_edge=which.max(tr$edge.length)) |> 
+    ape::ladderize() |>
     ape::keep.tip(tip=names(fas.haps))
 # tr.rooted.haps |> ape::ladderize() |> plot()
 tr.rooted.haps |> ape::write.tree(tr.path.root)
@@ -136,14 +138,6 @@ fixed.df <- fixed.df |> rename(fixed=locmin)
 fixed.df |> delimtools::report_delim()
 
 
-# parsimnet
-pnet <- haplotypes::parsimnet(haplotypes::as.dna(as.matrix(fas.haps)),indels="5th",prob=.95)
-pnet.df <- delimtools:::parsimnet_tbl(dna=fas.haps, parsimnet=pnet)
-pnet.df |> delimtools::report_delim()
-nrow(pnet.df) == nrow(as.matrix(fas.haps))
-names(fas.haps)[-which(names(fas.haps) %in% pull(pnet.df,labels))]
-
-
 # morph
 ncbi.tab.sub <- ncbi.tab |> filter(gbAccession %in% names(fas.haps))
 morph.df <- delimtools::morph_tbl(labels=dplyr::pull(ncbi.tab.sub,gbAccession),sppVector=dplyr::pull(ncbi.tab.sub,scientificName))
@@ -151,18 +145,37 @@ morph.df
 morph.df |> delimtools::report_delim()
 
 
+# collapse haps with parsimnet
+pnet <- haplotypes::parsimnet(haplotypes::as.dna(as.matrix(fas)),indels="missing",prob=0.95)
+pnet.df <- delimtools:::parsimnet_tbl(dna=fas, parsimnet=pnet)
+pnet.df |> delimtools::report_delim()
+#nrow(pnet.df) == nrow(as.matrix(fas))
+#names(fas)[-which(names(fas) %in% pull(pnet.df,labels))]
+#haps <- pull(pnet.df,labels)
+#fas.haps <- fas[haps]
+
+
 # join delims
 all.delims.df <- delimtools::delim_join(list(mptp.df,gmyc.df,bgmyc.df,locmin.df,fixed.df,asap.df,abgd.df,morph.df))#pnet.df,
 all.delims.df |> delimtools::report_delim()
 all.delims.df |> delim_consensus(n_match=3)
 
+# match ratio congruence
+all.delims.df |> delimtools::match_ratio() |> dplyr::arrange(desc(match_ratio)) |> print(n=Inf)
 
+
+# make tip labels
 tip.tab <- ncbi.tab.sub |> 
     dplyr::mutate(labs=glue::glue("{gbAccession} | {scientificName}")) |> 
     dplyr::select(gbAccession,labs,scientificName)
 
-cols <- delimtools::delim_brewer(delim=all.delims.df,package="viridisLite",palette="viridis",seed=42)
 
+# get colour palettes
+cols <- delimtools::delim_brewer(delim=all.delims.df,package="viridisLite",palette="viridis",seed=42)
+cols <- delimtools::delim_brewer(delim=all.delims.df,package="RColorBrewer",palette="Set2",seed=42)
+cols <- delimtools::delim_brewer(delim=all.delims.df,package="randomcoloR",seed=42)
+
+# plt
 p <- delimtools::delim_autoplot(delim=all.delims.df,tr=beast.tr,tbl_labs=tip.tab,col_vec=cols,hexpand=0.3,widths=c(0.4,0.1),n_match=3,delim_order=c("asap","abgd","locmin","fixed","gmyc","bgmyc","mptp","morph"),consensus=TRUE)
 ggplot2::ggsave(here::here("temp/amazophrynella-delimitation.pdf"),plot=p,height=500,width=400,units="mm")
 
@@ -170,7 +183,6 @@ ggplot2::ggsave(here::here("temp/amazophrynella-delimitation.pdf"),plot=p,height
 # autoplot2
 p <- delimtools::delim_autoplot2(delim=all.delims.df,tr=beast.tr, consensus=TRUE, n_match=3, tbl_labs=tip.tab, species="scientificName",hexpand= 0.1, widths= c(0.5, 0.2), delim_order=c("asap","abgd","locmin","fixed","gmyc","bgmyc","mptp","morph"))
 ggplot2::ggsave(here::here("temp/amazophrynella-delimitation-bw.pdf"),plot=p,height=500,width=400,units="mm")
-
 
 
 ```
